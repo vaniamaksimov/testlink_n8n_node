@@ -1,0 +1,53 @@
+{
+	"name": "n8n-nodes-testlink",
+	"version": "0.1.0",
+	"description": "n8n community node for TestLink test management system",
+	"keywords": [
+		"n8n-community-node-package",
+		"testlink",
+		"test-management",
+		"qa",
+		"testing"
+	],
+	"license": "MIT",
+	"homepage": "",
+	"author": {
+		"name": ""
+	},
+	"repository": {
+		"type": "git",
+		"url": ""
+	},
+	"engines": {
+		"node": ">=22.0"
+	},
+	"main": "index.js",
+	"scripts": {
+		"dev": "n8n-node dev",
+		"build": "n8n-node build",
+		"lint": "eslint nodes credentials --ext .ts --fix",
+		"release": "release-it"
+	},
+	"files": [
+		"dist"
+	],
+	"n8n": {
+		"n8nNodesApiVersion": 1,
+		"credentials": [
+			"dist/credentials/TestLinkApi.credentials.js"
+		],
+		"nodes": [
+			"dist/nodes/TestLink/TestLink.node.js"
+		]
+	},
+	"devDependencies": {
+		"@n8n/node-cli": "^0.1.0",
+		"eslint": "^9.0.0",
+		"prettier": "^3.0.0",
+		"release-it": "^19.0.0",
+		"typescript": "^5.0.0"
+	},
+	"peerDependencies": {
+		"n8n-workflow": "*"
+	}
+}
