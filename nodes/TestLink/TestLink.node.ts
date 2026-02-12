@@ -5,9 +5,19 @@ import type {
 	INodeTypeDescription,
 	IDataObject,
 } from 'n8n-workflow';
-import { NodeConnectionType } from 'n8n-workflow';
+import { NodeConnectionTypes } from 'n8n-workflow';
 
-import { testLinkApiRequest } from './GenericFunctions';
+import * as testProjectHandlers from './handlers/testProject';
+import * as testPlanHandlers from './handlers/testPlan';
+import * as testSuiteHandlers from './handlers/testSuite';
+import * as testCaseHandlers from './handlers/testCase';
+import * as buildHandlers from './handlers/build';
+import * as executionHandlers from './handlers/execution';
+
+type HandlerFunction = (
+	context: IExecuteFunctions,
+	itemIndex: number,
+) => Promise<any>;
 
 export class TestLink implements INodeType {
 	description: INodeTypeDescription = {
@@ -21,8 +31,8 @@ export class TestLink implements INodeType {
 		defaults: {
 			name: 'TestLink',
 		},
-		inputs: [NodeConnectionType.Main],
-		outputs: [NodeConnectionType.Main],
+		inputs: [NodeConnectionTypes.Main],
+		outputs: [NodeConnectionTypes.Main],
 		credentials: [
 			{
 				name: 'testLinkApi',
@@ -460,6 +470,15 @@ export class TestLink implements INodeType {
 		const items = this.getInputData();
 		const returnData: INodeExecutionData[] = [];
 
+		const handlers = {
+			testProject: testProjectHandlers,
+			testPlan: testPlanHandlers,
+			testSuite: testSuiteHandlers,
+			testCase: testCaseHandlers,
+			build: buildHandlers,
+			execution: executionHandlers,
+		};
+
 		const resource = this.getNodeParameter('resource', 0) as string;
 		const operation = this.getNodeParameter('operation', 0) as string;
 
@@ -467,118 +486,17 @@ export class TestLink implements INodeType {
 			try {
 				let responseData: IDataObject | IDataObject[];
 
-				if (resource === 'testProject') {
-					if (operation === 'getAll') {
-						responseData = await testLinkApiRequest.call(this, 'tl.getProjects', {});
-					} else if (operation === 'get') {
-						const projectName = this.getNodeParameter('projectName', i) as string;
-						responseData = await testLinkApiRequest.call(this, 'tl.getTestProjectByName', {
-							testprojectname: projectName,
-						});
-					} else {
-						throw new Error(`Operation ${operation} not supported`);
-					}
-				} else if (resource === 'testPlan') {
-					if (operation === 'getAll') {
-						const projectName = this.getNodeParameter('projectName', i) as string;
-						responseData = await testLinkApiRequest.call(this, 'tl.getProjectTestPlans', {
-							testprojectname: projectName,
-						});
-					} else if (operation === 'get') {
-						const projectName = this.getNodeParameter('projectName', i) as string;
-						const planName = this.getNodeParameter('planName', i) as string;
-						responseData = await testLinkApiRequest.call(this, 'tl.getTestPlanByName', {
-							testprojectname: projectName,
-							testplanname: planName,
-						});
-					} else {
-						throw new Error(`Operation ${operation} not supported`);
-					}
-				} else if (resource === 'testSuite') {
-					if (operation === 'getAll') {
-						const projectId = this.getNodeParameter('projectId', i) as number;
-						responseData = await testLinkApiRequest.call(
-							this,
-							'tl.getFirstLevelTestSuitesForTestProject',
-							{
-								testprojectid: projectId,
-							},
-						);
-					} else if (operation === 'get') {
-						const suiteId = this.getNodeParameter('suiteId', i) as number;
-						responseData = await testLinkApiRequest.call(this, 'tl.getTestSuiteByID', {
-							testsuiteid: suiteId,
-						});
-					} else {
-						throw new Error(`Operation ${operation} not supported`);
-					}
-				} else if (resource === 'testCase') {
-					if (operation === 'get') {
-						const testCaseId = this.getNodeParameter('testCaseId', i) as number;
-						responseData = await testLinkApiRequest.call(this, 'tl.getTestCase', {
-							testcaseid: testCaseId,
-						});
-					} else if (operation === 'getAll') {
-						const testSuiteId = this.getNodeParameter('testSuiteId', i) as number;
-						responseData = await testLinkApiRequest.call(this, 'tl.getTestCasesForTestSuite', {
-							testsuiteid: testSuiteId,
-							deep: true,
-							details: 'full',
-						});
-					} else {
-						throw new Error(`Operation ${operation} not supported`);
-					}
-				} else if (resource === 'build') {
-					if (operation === 'getAll') {
-						const testPlanId = this.getNodeParameter('testPlanId', i) as number;
-						responseData = await testLinkApiRequest.call(this, 'tl.getBuildsForTestPlan', {
-							testplanid: testPlanId,
-						});
-					} else if (operation === 'create') {
-						const testPlanId = this.getNodeParameter('testPlanId', i) as number;
-						const buildName = this.getNodeParameter('buildName', i) as string;
-						const buildNotes = this.getNodeParameter('buildNotes', i) as string;
-						responseData = await testLinkApiRequest.call(this, 'tl.createBuild', {
-							testplanid: testPlanId,
-							buildname: buildName,
-							buildnotes: buildNotes,
-						});
-					} else {
-						throw new Error(`Operation ${operation} not supported`);
-					}
-				} else if (resource === 'execution') {
-					if (operation === 'report') {
-						const testPlanId = this.getNodeParameter('testPlanId', i) as number;
-						const testCaseExternalId = this.getNodeParameter('testCaseExternalId', i) as string;
-						const buildId = this.getNodeParameter('buildId', i) as number;
-						const status = this.getNodeParameter('status', i) as string;
-						const notes = this.getNodeParameter('notes', i) as string;
-
-						responseData = await testLinkApiRequest.call(this, 'tl.reportTCResult', {
-							testplanid: testPlanId,
-							testcaseexternalid: testCaseExternalId,
-							buildid: buildId,
-							status,
-							notes,
-						});
-					} else if (operation === 'getLast') {
-						const testPlanId = this.getNodeParameter('testPlanId', i) as number;
-						const testCaseExternalId = this.getNodeParameter('testCaseExternalId', i) as string;
-
-						responseData = await testLinkApiRequest.call(
-							this,
-							'tl.getLastExecutionResult',
-							{
-								testplanid: testPlanId,
-								testcaseexternalid: testCaseExternalId,
-							},
-						);
-					} else {
-						throw new Error(`Operation ${operation} not supported`);
-					}
-				} else {
-					throw new Error(`Resource ${resource} not supported`);
+				const resourceHandlers = handlers[resource as keyof typeof handlers];
+				if (!resourceHandlers) {
+					throw new Error(`Unknown resource: ${resource}`);
 				}
+
+				const handler = resourceHandlers[operation as keyof typeof resourceHandlers] as HandlerFunction;
+				if (!handler) {
+					throw new Error(`Unknown operation "${operation}" for resource "${resource}"`);
+				}
+
+				responseData = await handler(this, i);
 
 				const executionData = this.helpers.constructExecutionMetaData(
 					this.helpers.returnJsonArray(responseData),
