@@ -33,7 +33,7 @@ export async function testLinkApiRequest(
 	const payload = buildParams(params, apiKey);
 
 	return await new Promise<XmlRpcResponse>((resolve, reject) => {
-		client.methodCall(method, [payload], (error, value) => {
+		client.methodCall(method, [payload], (error: object, value: any) => {
 			if (error) {
 				const faultMessage =
 					(error as { faultString?: string; message?: string }).faultString ??

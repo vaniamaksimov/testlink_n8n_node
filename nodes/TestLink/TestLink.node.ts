@@ -21,6 +21,7 @@ type HandlerFunction = (
 
 export class TestLink implements INodeType {
 	description: INodeTypeDescription = {
+		usableAsTool: true,
 		displayName: 'TestLink',
 		name: 'testLink',
 		icon: 'file:testlink.svg',
