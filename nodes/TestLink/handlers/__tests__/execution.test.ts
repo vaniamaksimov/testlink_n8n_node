@@ -57,4 +57,24 @@ describe('execution handler', () => {
 		});
 		expect(result).toEqual({ id: 99, status: 'f' });
 	});
+
+	describe('edge cases', () => {
+		it('report propagates API error', async () => {
+			mockApiRequest.mockRejectedValue(new Error('TestLink API Error: Invalid test case'));
+			const ctx = mockContext({
+				testPlanId: 10,
+				testCaseExternalId: 'TC-999',
+				buildId: 5,
+				status: 'p',
+				notes: '',
+			});
+			await expect(report(ctx, 0)).rejects.toThrow('TestLink API Error: Invalid test case');
+		});
+
+		it('getLast propagates API error', async () => {
+			mockApiRequest.mockRejectedValue(new Error('TestLink API Error: Server down'));
+			const ctx = mockContext({ testPlanId: 10, testCaseExternalId: 'TC-1' });
+			await expect(getLast(ctx, 0)).rejects.toThrow('TestLink API Error: Server down');
+		});
+	});
 });

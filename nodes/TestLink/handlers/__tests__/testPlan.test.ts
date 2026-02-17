@@ -40,4 +40,25 @@ describe('testPlan handler', () => {
 		});
 		expect(result).toEqual({ id: 10, name: 'Plan1' });
 	});
+
+	describe('edge cases', () => {
+		it('getAll returns empty array', async () => {
+			mockApiRequest.mockResolvedValue([]);
+			const ctx = mockContext({ projectName: 'Proj1' });
+			const result = await getAll(ctx, 0);
+			expect(result).toEqual([]);
+		});
+
+		it('getAll propagates API error', async () => {
+			mockApiRequest.mockRejectedValue(new Error('TestLink API Error: Server down'));
+			const ctx = mockContext({ projectName: 'Proj1' });
+			await expect(getAll(ctx, 0)).rejects.toThrow('TestLink API Error: Server down');
+		});
+
+		it('get propagates API error', async () => {
+			mockApiRequest.mockRejectedValue(new Error('TestLink API Error: Not found'));
+			const ctx = mockContext({ projectName: 'Proj1', planName: 'Missing' });
+			await expect(get(ctx, 0)).rejects.toThrow('TestLink API Error: Not found');
+		});
+	});
 });
