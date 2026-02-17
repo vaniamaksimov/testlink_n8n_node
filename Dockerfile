@@ -3,7 +3,7 @@ FROM n8nio/n8n:latest
 USER root
 
 # Copy the custom nodes folder
-COPY . /home/node/.n8n/custom/node_modules/custom_nodes
+COPY ./nodes/ /home/node/.n8n/custom/node_modules/custom_nodes
 
 # Switch back to the node user
 USER node
