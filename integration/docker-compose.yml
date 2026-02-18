@@ -1,0 +1,36 @@
+services:
+  mariadb:
+    image: mariadb:10.6
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_USER=testlink
+      - MYSQL_PASSWORD=testlink
+      - MYSQL_DATABASE=testlink
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  testlink:
+    build:
+      context: ./testlink
+      args:
+        TESTLINK_VERSION: "1.9.19"
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    ports:
+      - "8080:80"
+    environment:
+      - TESTLINK_DB_HOST=mariadb
+      - TESTLINK_DB_USER=testlink
+      - TESTLINK_DB_PASS=testlink
+      - TESTLINK_DB_NAME=testlink
+      - MYSQL_ROOT_PASSWORD=root
+      - TESTLINK_ADMIN_PASSWORD=admin
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/"]
+      interval: 10s
+      timeout: 5s
+      retries: 15

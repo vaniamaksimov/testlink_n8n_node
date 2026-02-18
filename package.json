@@ -23,7 +23,8 @@
         "lint:fix": "n8n-node lint --fix",
         "release": "n8n-node release",
         "prepublishOnly": "n8n-node prerelease",
-        "test": "jest"
+        "test": "jest",
+        "test:integration": "jest --config jest.integration.config.js --runInBand"
     },
     "files": [
         "dist"
@@ -47,6 +48,7 @@
         "jest": "^30.2.0",
         "prettier": "3.6.2",
         "release-it": "^19.0.4",
+        "testcontainers": "^11.12.0",
         "ts-jest": "^29.4.6",
         "typescript": "5.9.2"
     },
