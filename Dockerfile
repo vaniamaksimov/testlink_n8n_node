@@ -2,13 +2,15 @@ FROM n8nio/n8n:latest
 
 USER root
 
-# Copy the custom nodes folder
-COPY ./nodes/ /home/node/.n8n/custom/node_modules/custom_nodes
+# Copy the pre-built package
+COPY package.json /custom-nodes/node_modules/n8n-nodes-testlink/package.json
+COPY dist/ /custom-nodes/node_modules/n8n-nodes-testlink/dist/
 
-# Switch back to the node user
+# Install only production dependencies
+WORKDIR /custom-nodes/node_modules/n8n-nodes-testlink
+RUN npm install --omit=dev
+
 USER node
-
-# Set the working directory
 WORKDIR /home/node
 
-# Use the default entrypoint and CMD from the base image
+ENV N8N_CUSTOM_EXTENSIONS=/custom-nodes/node_modules/n8n-nodes-testlink
